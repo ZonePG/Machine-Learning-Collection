@@ -8,48 +8,18 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from tqdm import tqdm
 
-
-# simple CNN
-class CNN(nn.Module):
-    def __init__(self, in_channels=1, num_classes=10):
-        super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(
-            in_channels=1,
-            out_channels=8,
-            kernel_size=(3, 3),
-            stride=(1, 1),
-            padding=(1, 1),
-        )
-        self.pool = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
-        self.conv2 = nn.Conv2d(
-            in_channels=8,
-            out_channels=16,
-            kernel_size=(3, 3),
-            stride=(1, 1),
-            padding=(1, 1),
-        )
-        self.fc1 = nn.Linear(16 * 7 * 7, num_classes)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = self.pool(x)
-        x = F.relu(self.conv2(x))
-        x = self.pool(x)
-        x = x.reshape(x.shape[0], -1)
-        x = self.fc1(x)
-
-        return x
-
-
 # Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparameters
-in_channels = 1
+input_size = 784
 num_classes = 10
 learning_rate = 0.001
 batch_size = 64
-num_epoch = 5
+num_epoch = 1
+
+# Create a RNN
+
 
 # Load data
 train_dataset = datasets.MNIST(
@@ -62,7 +32,7 @@ test_dataset = datasets.MNIST(
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
 
 # Initialize network
-model = CNN().to(device)
+model = NN(input_size=input_size, num_classes=num_classes).to(device)
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -75,6 +45,9 @@ for epoch in range(num_epoch):
         # Get data to cuda if possible
         data = data.to(device=device)
         targets = targets.to(device)
+
+        # Get correct shape
+        data = data.reshape(data.shape[0], -1)
 
         # forward
         scores = model(data)
@@ -92,7 +65,6 @@ for epoch in range(num_epoch):
         # loop.set_postfix(loss=loss.item(), acc=torch.rand(1).item())
         loop.set_postfix(loss=loss.item())
 
-
 # Check accuracy on training & test to see how good our model
 def check_accuracy(loader, model):
     if loader.dataset.train:
@@ -108,6 +80,7 @@ def check_accuracy(loader, model):
         for x, y in loader:
             x = x.to(device=device)
             y = y.to(device=device)
+            x = x.reshape(x.shape[0], -1)
 
             scores = model(x)
             _, predictions = scores.max(1)

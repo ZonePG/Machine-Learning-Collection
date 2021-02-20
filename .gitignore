@@ -1,3 +1,7 @@
 .idea/
 ML/Pytorch/more_advanced/image_captioning/flickr8k/
 ML/algorithms/svm/__pycache__/utils.cpython-38.pyc
+runs/
+dataset/
+logs/
+__pycache__/
