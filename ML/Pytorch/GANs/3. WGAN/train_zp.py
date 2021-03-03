@@ -10,15 +10,15 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from model import Discriminator, Generator, initialize_weights
+from model_zp import Discriminator, Generator, initialize_weights
 
 # Hyperparameters etc
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 LEARNING_RATE = 5e-5
 BATCH_SIZE = 64
 IMAGE_SIZE = 64
 CHANNELS_IMG = 1
-Z_DIM = 128
+Z_DIM = 100
 NUM_EPOCHS = 5
 FEATURES_CRITIC = 64
 FEATURES_GEN = 64
@@ -36,7 +36,7 @@ transforms = transforms.Compose(
 )
 
 dataset = datasets.MNIST(root="dataset/", transform=transforms, download=True)
-#comment mnist and uncomment below if you want to train on CelebA dataset
+# comment mnist and uncomment below if you want to train on CelebA dataset
 # dataset = datasets.ImageFolder(root="celeb_dataset", transform=transforms)
 loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
@@ -49,6 +49,7 @@ initialize_weights(critic)
 # initializate optimizer
 opt_gen = optim.RMSprop(gen.parameters(), lr=LEARNING_RATE)
 opt_critic = optim.RMSprop(critic.parameters(), lr=LEARNING_RATE)
+criterion = nn.BCELoss()
 
 # for tensorboard plotting
 fixed_noise = torch.randn(32, Z_DIM, 1, 1).to(device)
